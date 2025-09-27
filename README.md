@@ -36,6 +36,68 @@ operations without bespoke API integrations.
    The server exposes the MCP tools `list_boards`, `get_board_items`, `get_item`,
    `create_item`, `update_item`, and `delete_item`.
 
+## Using with MCP Clients
+
+You can connect the running server to any MCP-compatible client by referencing the
+same command that you would run locally. Below are example configurations for the
+most common tools.
+
+### Claude Code (VS Code extension)
+
+Add an entry under `claudeCode.mcpServers` in your VS Code `settings.json`:
+
+```json
+{
+  "claudeCode.mcpServers": [
+    {
+      "name": "miro",
+      "command": "uv",
+      "args": ["run", "python", "-m", "miro_mcp"],
+      "env": {
+        "MIRO_TOKEN": "${env:MIRO_TOKEN}"
+      }
+    }
+  ]
+}
+```
+
+The extension will spawn the server automatically when you open a workspace and
+surface the `miro` tools from the MCP sidebar.
+
+### Cursor
+
+In Cursor, open **Settings → MCP Servers → Add Server** and supply the same
+command:
+
+```json
+{
+  "name": "miro",
+  "command": "uv",
+  "args": ["run", "python", "-m", "miro_mcp"],
+  "env": {
+    "MIRO_TOKEN": "${env:MIRO_TOKEN}"
+  }
+}
+```
+
+Once saved, the Cursor chat sidebar will list the `miro` tools and allow you to
+invoke them within your project.
+
+### Codex CLI
+
+Register the server with the Codex CLI using the `mcp add` subcommand:
+
+```bash
+codex mcp add miro --command uv -- uv run python -m miro_mcp
+```
+
+The CLI forwards your current environment so make sure `MIRO_TOKEN` is set before
+invoking any MCP tools:
+
+```bash
+MIRO_TOKEN=your-token codex mcp call miro list_boards
+```
+
 ## Development
 
 - Format and lint the codebase:
