@@ -111,6 +111,12 @@ propagate it to the server when it launches the subprocess. Verify connectivity 
 codex mcp call miro list_boards --input '{}'
 ```
 
+Codex also surfaces the tool instructions that the server provides. Run `/mcp describe`
+inside the CLI to see the short usage notes that accompany each tool. Other clients may
+render the same metadata inline (for example, Claude Code shows it in the MCP sidebar).
+If a client does not display these hints automatically you can still request them with a
+manual describe call or by inspecting the schema files in `src/miro_mcp/schemas.py`.
+
 ## Troubleshooting
 
 - **Codex lists `Tools: (none)` for the `miro` server** – the subprocess failed to
