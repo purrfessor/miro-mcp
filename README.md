@@ -91,12 +91,37 @@ Register the server with the Codex CLI using the `mcp add` subcommand:
 codex mcp add miro --command uv -- uv run python -m miro_mcp
 ```
 
-The CLI forwards your current environment so make sure `MIRO_TOKEN` is set before
-invoking any MCP tools:
+Codex spawns the server in a subprocess, so the most reliable approach is to pass the
+token explicitly from your MCP configuration. Append the following to
+`~/.config/codex/config.toml` (or the equivalent path on your platform):
+
+```toml
+[mcp_servers.miro]
+command = "uv"
+args = ["run", "python", "-m", "miro_mcp"]
+
+[mcp_servers.miro.env]
+MIRO_TOKEN = "${env:MIRO_TOKEN}"
+```
+
+With this setup you can continue exporting `MIRO_TOKEN` in your shell and the CLI will
+propagate it to the server when it launches the subprocess. Verify connectivity with:
 
 ```bash
-MIRO_TOKEN=your-token codex mcp call miro list_boards
+codex mcp call miro list_boards --input '{}'
 ```
+
+## Troubleshooting
+
+- **Codex lists `Tools: (none)` for the `miro` server** – the subprocess failed to
+  start, usually because `MIRO_TOKEN` was not passed through. Confirm the token is set
+  in the MCP configuration as shown above or saved in a `.env` file next to the
+  repository so the settings loader can discover it.
+- **Assistants ignore the Miro MCP tools** – most chat clients will only invoke a tool
+  when you ask for a specific action. Prompt them with concrete instructions such as
+  “Call `list_boards` and show me the available boards” or “Use `get_board_items` on
+  board `<board-id>` and summarise the sticky notes.” This gives the agent permission to
+  use the MCP interface rather than free-form generation (e.g., ASCII art).
 
 ## Development
 
