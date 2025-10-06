@@ -19,6 +19,7 @@ from miro_mcp.schemas import (
     ItemPosition,
     ListBoardsRequest,
     ShapeItem,
+    ShapeItemCreate,
     StickyNoteItem,
     TextItem,
     TextItemCreate,
@@ -410,3 +411,49 @@ async def test_create_update_delete_item_flow(integration_env: tuple[MiroService
     assert path == "/v2/boards/board-2/items/text-2"
     assert query.get("permanent") == ["true"]
     assert _extract_header(delete_requests[0], "authorization") == "Bearer test-token"
+
+
+@pytest.mark.asyncio
+async def test_create_shape_item_integration(
+    integration_env: tuple[MiroService, str]
+) -> None:
+    service, base_url = integration_env
+    await _register_stub(
+        base_url,
+        method="POST",
+        url_path="/v2/boards/uXjVIA6Zsx8=/items",
+        status=201,
+        body={
+            "id": "shape-123",
+            "type": "shape",
+            "data": {"content": "Square", "shape": {"type": "rectangle"}},
+            "position": {"x": 0.0, "y": 0.0, "width": 300.0, "height": 300.0},
+        },
+    )
+
+    request = CreateItemRequest(
+        board_id="uXjVIA6Zsx8=",
+        item=ShapeItemCreate(
+            shape="rectangle",
+            content="Square",
+            position=ItemPosition(x=0.0, y=0.0, width=300.0, height=300.0),
+        ),
+    )
+
+    response = await service.create_item(request)
+
+    assert isinstance(response.item, ShapeItem)
+    assert response.item.id == "shape-123"
+    assert response.item.content == "Square"
+    assert response.item.shape == "rectangle"
+
+    requests = await _fetch_requests(
+        base_url, method="POST", url_path="/v2/boards/uXjVIA6Zsx8=/items"
+    )
+    assert requests, "Expected create_item request for shape"
+    create_body = _request_body_json(requests[0])
+    assert create_body.get("data", {}).get("content") == "Square"
+    shape_payload = create_body.get("data", {}).get("shape")
+    assert shape_payload == {"type": "rectangle"}
+    position = create_body.get("position")
+    assert position == {"x": 0.0, "y": 0.0, "width": 300.0, "height": 300.0}
